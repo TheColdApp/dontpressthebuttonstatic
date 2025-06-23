@@ -1,312 +1,647 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ultimate Crazy Press the Button!</title>
-  <style>
-    /* Base styles */
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-    body {
-      margin: 0; 
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      overflow: hidden;
-      font-family: 'Orbitron', monospace;
-      color: white;
-      user-select: none;
-    }
-    #container {
-      text-align: center;
-    }
-    #level-indicator {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
-      text-shadow: 0 0 8px #ff00ff;
-    }
-    #crazy-button {
-      background: linear-gradient(90deg, #ff007f, #7f00ff);
-      border: none;
-      border-radius: 20px;
-      color: white;
-      font-size: 2.5rem;
-      font-weight: 900;
-      padding: 25px 80px;
-      cursor: pointer;
-      outline: none;
-      box-shadow: 0 0 25px #ff00ff, 0 0 40px #7f00ff inset;
-      transition: all 0.3s ease;
-      position: relative;
-      perspective: 1000px;
-    }
-    #crazy-button:active {
-      filter: brightness(1.3);
-      transform: scale(1.1);
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ultimate CRAZY Press the Button Madness</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
 
-    /* Shake animation */
-    @keyframes shake {
-      0%, 100% { transform: translate(0, 0) rotate(0); }
-      20%, 60% { transform: translate(-10px, 5px) rotate(-5deg); }
-      40%, 80% { transform: translate(10px, -5px) rotate(5deg); }
-    }
+  /* === BASE === */
+  html, body {
+    margin: 0; padding: 0; overflow: hidden;
+    height: 100vh; width: 100vw;
+    font-family: 'Orbitron', monospace;
+    background: black;
+    user-select: none;
+    cursor: none; /* Hide cursor for effect */
+    perspective: 1000px;
+  }
+  #container {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #level-indicator {
+    position: fixed;
+    top: 12px; left: 12px;
+    color: white;
+    font-size: 1.6rem;
+    text-shadow: 0 0 12px magenta;
+    z-index: 9999;
+  }
 
-    /* Pulse animation */
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 20px #ff00ff, 0 0 40px #7f00ff inset; }
-      50% { box-shadow: 0 0 40px #00ffff, 0 0 80px #ff00ff inset; }
-    }
+  /* === BUTTON === */
+  #crazy-button {
+    background: linear-gradient(90deg, #ff00ff, #00ffff);
+    border-radius: 40px;
+    border: none;
+    padding: 30px 100px;
+    font-size: 3.5rem;
+    color: white;
+    font-weight: 900;
+    box-shadow:
+      0 0 30px #ff00ff,
+      0 0 80px #00ffff inset;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 9999;
+    filter: drop-shadow(0 0 10px magenta);
+    user-select: none;
+  }
+  #crazy-button:active {
+    filter: drop-shadow(0 0 20px cyan);
+    transform: scale(1.15);
+  }
 
-    /* Spin animation */
-    @keyframes spin {
-      from { transform: rotateY(0deg); }
-      to { transform: rotateY(360deg); }
-    }
+  /* === FLASHING BACKGROUND === */
+  @keyframes flashBG {
+    0%{background-color: hsl(0,100%,50%);}
+    25%{background-color: hsl(90,100%,50%);}
+    50%{background-color: hsl(180,100%,50%);}
+    75%{background-color: hsl(270,100%,50%);}
+    100%{background-color: hsl(360,100%,50%);}
+  }
+  #flash-bg {
+    position: fixed;
+    top:0; left:0; width:100vw; height:100vh;
+    animation: flashBG 4s linear infinite;
+    mix-blend-mode: screen;
+    pointer-events:none;
+    z-index: 1;
+  }
 
-    /* Psychedelic Background animation */
-    @keyframes psychedelic {
-      0% { filter: hue-rotate(0deg); }
-      100% { filter: hue-rotate(360deg); }
-    }
+  /* === MULTIPLE BUTTON CLONES === */
+  .clone-btn {
+    position: fixed;
+    font-size: 2.5rem;
+    font-weight: 900;
+    border-radius: 30px;
+    padding: 15px 60px;
+    border:none;
+    background: linear-gradient(90deg, #ff00ff, #00ffff);
+    box-shadow: 0 0 20px #00ffff;
+    color: white;
+    pointer-events:none;
+    user-select:none;
+    animation: spin 10s linear infinite;
+    filter: drop-shadow(0 0 6px cyan);
+    mix-blend-mode: screen;
+  }
 
-    /* 3D cube container */
-    #cube-container {
-      width: 150px;
-      height: 150px;
-      margin: 40px auto 0;
-      perspective: 800px;
-      display: none;
-    }
-    #cube {
-      width: 150px;
-      height: 150px;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: spin 10s linear infinite;
-    }
-    .face {
-      position: absolute;
-      width: 150px;
-      height: 150px;
-      background: linear-gradient(45deg, #ff007f, #7f00ff);
-      border: 2px solid white;
-      opacity: 0.9;
-      box-shadow: 0 0 10px white;
-      line-height: 150px;
-      font-size: 3rem;
-      font-weight: 900;
-      text-align: center;
-      color: white;
-      font-family: 'Orbitron', monospace;
-      user-select: none;
-    }
-    .front  { transform: translateZ(75px); }
-    .back   { transform: rotateY(180deg) translateZ(75px); }
-    .right  { transform: rotateY(90deg) translateZ(75px); }
-    .left   { transform: rotateY(-90deg) translateZ(75px); }
-    .top    { transform: rotateX(90deg) translateZ(75px); }
-    .bottom { transform: rotateX(-90deg) translateZ(75px); }
+  /* === PARTICLE EXPLOSION === */
+  #particles {
+    position: fixed;
+    top:0; left:0; width: 100vw; height: 100vh;
+    pointer-events:none;
+    z-index: 9998;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    box-shadow: 0 0 10px #ff00ff, 0 0 15px #00ffff inset;
+    opacity: 0.8;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
 
-    /* Final madness container */
-    #madness {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      pointer-events: none;
-      display: none;
-      overflow: visible;
-      z-index: 999;
-      filter: drop-shadow(0 0 10px white);
-      animation: psychedelic 15s linear infinite;
-    }
+  /* === FRACTAL KALEIDOSCOPE === */
+  #fractal-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 0 20px cyan);
+    pointer-events:none;
+    z-index: 1;
+    mix-blend-mode: screen;
+    user-select:none;
+  }
 
-    /* Psychedelic floating shapes */
-    .shape {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, #ff00ff, #00ffff);
-      opacity: 0.7;
-      box-shadow: 0 0 10px #ff00ff, 0 0 15px #00ffff inset;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
-    }
+  /* === GLITCH TEXT === */
+  @keyframes glitchTop {
+    0%, 100% { clip-path: inset(0 0 80% 0); transform: translate(2px, -2px);}
+    50% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 2px);}
+  }
+  @keyframes glitchBottom {
+    0%, 100% { clip-path: inset(80% 0 0 0); transform: translate(-2px, 2px);}
+    50% { clip-path: inset(60% 0 20% 0); transform: translate(2px, -2px);}
+  }
+  #crazy-button.glitch::before,
+  #crazy-button.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: transparent;
+    overflow: hidden;
+    color: #ff00ff;
+    text-shadow: 1px 0 #00ffff;
+  }
+  #crazy-button.glitch::before {
+    animation: glitchTop 1s infinite linear alternate-reverse;
+    clip-path: inset(0 0 80% 0);
+  }
+  #crazy-button.glitch::after {
+    animation: glitchBottom 1s infinite linear alternate;
+    clip-path: inset(80% 0 0 0);
+  }
 
-  </style>
+  /* === 3D CSS TUNNEL === */
+  #tunnel {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    pointer-events:none;
+    filter: drop-shadow(0 0 15px magenta);
+    z-index: 0;
+  }
+  .ring {
+    position: absolute;
+    border: 3px solid transparent;
+    border-top: 3px solid cyan;
+    border-radius: 50%;
+    box-shadow: 0 0 15px cyan;
+    animation: rotateRing 8s linear infinite;
+  }
+  .ring:nth-child(1) {
+    width: 400px; height: 400px;
+    top: 100px; left: 100px;
+    animation-duration: 10s;
+  }
+  .ring:nth-child(2) {
+    width: 300px; height: 300px;
+    top: 150px; left: 150px;
+    animation-duration: 6s;
+    border-top-color: magenta;
+    box-shadow: 0 0 20px magenta;
+  }
+  .ring:nth-child(3) {
+    width: 200px; height: 200px;
+    top: 200px; left: 200px;
+    animation-duration: 4s;
+    border-top-color: #00fffc;
+    box-shadow: 0 0 25px #00fffc;
+  }
+
+  @keyframes rotateRing {
+    0% {transform: rotateX(0deg) rotateY(0deg);}
+    100% {transform: rotateX(360deg) rotateY(360deg);}
+  }
+
+  /* === CONFETTI === */
+  #confetti {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events:none;
+    overflow: visible;
+    z-index: 9997;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    opacity: 0.9;
+    transform-origin: center center;
+    border-radius: 3px;
+    box-shadow: 0 0 6px #ff00ff;
+    animation-timing-function: linear;
+  }
+
+  /* === MOUSE TRAIL === */
+  #mouse-trail {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events:none;
+    z-index: 9999;
+  }
+  .trail-dot {
+    position: absolute;
+    width: 15px; height: 15px;
+    background: linear-gradient(45deg, #00ffff, #ff00ff);
+    border-radius: 50%;
+    opacity: 0.8;
+    box-shadow: 0 0 10px #00ffff;
+    pointer-events:none;
+    mix-blend-mode: screen;
+  }
+
+  /* === MIRROR & KALEIDOSCOPE === */
+  #mirror {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events:none;
+    filter: url(#kaleido);
+    z-index: 9990;
+  }
+
+  /* === ZOOM & WARP === */
+  #zoom-warp {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events:none;
+    filter:
+      hue-rotate(0deg)
+      saturate(150%)
+      brightness(110%)
+      contrast(130%)
+      drop-shadow(0 0 20px magenta);
+    animation: zoomWarpAnim 8s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+    z-index: 9991;
+  }
+  @keyframes zoomWarpAnim {
+    0% {transform: scale(1) skew(0deg,0deg);}
+    50% {transform: scale(1.2) skew(5deg,5deg);}
+    100% {transform: scale(1) skew(0deg,0deg);}
+  }
+
+  /* === SPIN ANIMATION === */
+  @keyframes spin {
+    0% {transform: rotate(0deg);}
+    100% {transform: rotate(360deg);}
+  }
+
+</style>
 </head>
 <body>
-  <div id="container">
-    <div id="level-indicator">Level: 1</div>
-    <button id="crazy-button">PRESS ME!</button>
 
-    <div id="cube-container">
-      <div id="cube">
-        <div class="face front">🤪</div>
-        <div class="face back">🔥</div>
-        <div class="face right">💥</div>
-        <div class="face left">💫</div>
-        <div class="face top">🌈</div>
-        <div class="face bottom">⚡</div>
-      </div>
-    </div>
+  <div id="flash-bg"></div>
+  <div id="zoom-warp"></div>
+  <svg id="mirror" width="100vw" height="100vh" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <defs>
+      <filter id="kaleido" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="4" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="30" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+        <feTile in="displaced" result="tiled" x="0" y="0" width="50%" height="50%"/>
+      </filter>
+    </defs>
+    <rect width="100%" height="100%" fill="black"/>
+  </svg>
+
+  <div id="container">
+    <button id="crazy-button" data-text="PRESS ME!">PRESS ME!</button>
   </div>
 
-  <div id="madness"></div>
+  <div id="particles"></div>
+  <div id="confetti"></div>
+  <div id="mouse-trail"></div>
+  <div id="fractal-container"></div>
+  <div id="tunnel">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+  </div>
+
+  <div id="level-indicator">Level: 0</div>
 
 <script>
-  const btn = document.getElementById('crazy-button');
+  // UTILS
+  function random(min, max) { return Math.random()*(max-min)+min; }
+  function randomInt(min,max) { return Math.floor(random(min,max)); }
+  function randomChoice(arr) { return arr[randomInt(0, arr.length-1)]; }
+  function hsvToRgb(h,s,v) {
+    let c = v*s;
+    let x = c*(1 - Math.abs((h/60)%2-1));
+    let m = v-c;
+    let r,g,b;
+    if(h < 60){r=c;g=x;b=0;}
+    else if(h < 120){r=x;g=c;b=0;}
+    else if(h < 180){r=0;g=c;b=x;}
+    else if(h < 240){r=0;g=x;b=c;}
+    else if(h < 300){r=x;g=0;b=c;}
+    else{r=c;g=0;b=x;}
+    return [Math.floor((r+m)*255), Math.floor((g+m)*255), Math.floor((b+m)*255)];
+  }
+
+  // === GLOBALS ===
+  const button = document.getElementById('crazy-button');
+  const particles = document.getElementById('particles');
+  const confetti = document.getElementById('confetti');
+  const trail = document.getElementById('mouse-trail');
+  const fractalContainer = document.getElementById('fractal-container');
+  const tunnel = document.getElementById('tunnel');
   const levelIndicator = document.getElementById('level-indicator');
-  const cubeContainer = document.getElementById('cube-container');
-  const madnessContainer = document.getElementById('madness');
-  let level = 1;
+  const flashBg = document.getElementById('flash-bg');
+  const zoomWarp = document.getElementById('zoom-warp');
 
-  // Play beep sounds
-  function playBeep(freq, duration = 150) {
-    const ctx = new AudioContext();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    oscillator.frequency.value = freq;
-    oscillator.type = 'square';
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    oscillator.start();
+  let level = 0;
 
-    gainNode.gain.setValueAtTime(1, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+  // SOUND CONTEXT for beeps
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const audioCtx = new AudioCtx();
 
-    oscillator.stop(ctx.currentTime + duration / 1000);
+  function playBeep(freq=440,duration=150){
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    osc.type = 'square';
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration/1000);
+    osc.stop(audioCtx.currentTime + duration/1000);
   }
 
-  // Random HSL color for neon madness
-  function randomColor() {
-    return `hsl(${Math.floor(Math.random() * 360)}, 100%, 60%)`;
+  // === MULTIPLE BUTTON CLONES RAIN ===
+  let clones = [];
+  function createClone() {
+    const clone = document.createElement('button');
+    clone.classList.add('clone-btn');
+    clone.textContent = 'PRESS ME!';
+    clone.style.top = random(0, window.innerHeight - 50) + 'px';
+    clone.style.left = random(0, window.innerWidth - 150) + 'px';
+    clone.style.animationDuration = random(5, 15) + 's';
+    clones.push({el: clone, x: parseFloat(clone.style.left), y: parseFloat(clone.style.top), speedX: random(-1,1), speedY: random(1,3)});
+    document.body.appendChild(clone);
   }
 
-  // Helper: random int
-  function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  for(let i=0; i<15; i++) createClone();
+
+  // Clone movement loop
+  function updateClones() {
+    clones.forEach(c=>{
+      c.x += c.speedX;
+      c.y += c.speedY;
+      if(c.x < -200) c.x = window.innerWidth;
+      if(c.x > window.innerWidth) c.x = -150;
+      if(c.y > window.innerHeight) c.y = -50;
+      c.el.style.left = c.x + 'px';
+      c.el.style.top = c.y + 'px';
+    });
+    requestAnimationFrame(updateClones);
   }
+  updateClones();
 
-  // Shake animation helper
-  function shakeElement(el, duration = 700) {
-    el.style.animation = 'shake 0.7s';
-    setTimeout(() => { el.style.animation = ''; }, duration);
-  }
-
-  // Create a floating psychedelic shape for final madness
-  function createShape() {
-    const shape = document.createElement('div');
-    shape.classList.add('shape');
-    shape.style.background = `linear-gradient(45deg, ${randomColor()}, ${randomColor()})`;
-    shape.style.width = shape.style.height = `${randomInt(15, 50)}px`;
-    shape.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%'; // circle or square-ish
-
-    // Random start position
-    shape.style.top = `${randomInt(0, window.innerHeight)}px`;
-    shape.style.left = `${randomInt(0, window.innerWidth)}px`;
-
-    // Animation
-    const animDuration = randomInt(4000, 10000);
-    const keyframesName = `float${Math.random().toString(36).substr(2,5)}`;
-
-    const keyframes = `
-      @keyframes ${keyframesName} {
-        0% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
-        50% { transform: translate(${randomInt(-100,100)}px, ${randomInt(-100,100)}px) rotate(${randomInt(0,360)}deg); opacity: 1; }
-        100% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
-      }
-    `;
-    const styleSheet = document.styleSheets[0];
-    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-
-    shape.style.animation = `${keyframesName} ${animDuration}ms ease-in-out infinite`;
-
-    madnessContainer.appendChild(shape);
-  }
-
-  // Main madness progression
-  btn.addEventListener('click', () => {
-    level++;
-    if(level > 10) level = 1;
-    levelIndicator.textContent = `Level: ${level}`;
-
-    // Play beep with frequency increasing by level
-    playBeep(200 + level * 150, 100);
-
-    // LEVEL 1-3: Mild madness - color shifts, shake, size jump
-    if(level <= 3) {
-      // Color crazy gradient background
-      const c1 = randomColor();
-      const c2 = randomColor();
-      btn.style.background = `linear-gradient(90deg, ${c1}, ${c2})`;
-      btn.style.color = randomColor();
-
-      // Random padding and font size jump
-      const pad = randomInt(15, 60);
-      btn.style.padding = `${pad}px ${pad * 2}px`;
-      btn.style.fontSize = `${(Math.random() * 1.5 + 1.5).toFixed(2)}rem`;
-
-      // Shake button
-      shakeElement(btn);
-
-      // Slight random movement
-      btn.style.position = 'relative';
-      btn.style.left = `${randomInt(-20, 20)}px`;
-      btn.style.top = `${randomInt(-20, 20)}px`;
-
-      // Remove madness container if visible
-      madnessContainer.style.display = 'none';
-      cubeContainer.style.display = 'none';
-      btn.style.boxShadow = `0 0 25px ${c1}, 0 0 40px ${c2} inset`;
-      btn.style.animation = 'pulse 2s infinite alternate';
-
-    } else if(level <= 6) {
-      // LEVEL 4-6: Add 3D cube + wild spinning & glowing button
-      btn.style.animation = 'spin 4s linear infinite';
-      btn.style.color = '#fff';
-      btn.style.background = 'linear-gradient(90deg, #ff0080, #8000ff)';
-      btn.style.padding = '30px 90px';
-      btn.style.fontSize = '3rem';
-      btn.style.position = 'relative';
-      btn.style.left = '0';
-      btn.style.top = '0';
-      btn.style.boxShadow = '0 0 30px #ff00ff, 0 0 60px #8000ff inset';
-
-      cubeContainer.style.display = 'block';
-      madnessContainer.style.display = 'none';
-
-    } else {
-      // LEVEL 7-10: Absolute madness! Psychedelic shapes explode and swirl!
-
-      // Stop button spin but do crazy colors & flickering
-      btn.style.animation = '';
-      btn.style.background = `linear-gradient(90deg, ${randomColor()}, ${randomColor()})`;
-      btn.style.color = randomColor();
-      btn.style.padding = `${randomInt(20, 70)}px ${randomInt(60, 150)}px`;
-      btn.style.fontSize = `${(Math.random() * 2 + 2).toFixed(2)}rem`;
-      btn.style.position = 'absolute';
-
-      // Move button randomly on screen (avoid edges)
-      const maxX = window.innerWidth - btn.offsetWidth - 20;
-      const maxY = window.innerHeight - btn.offsetHeight - 20;
-      btn.style.left = `${randomInt(20, maxX)}px`;
-      btn.style.top = `${randomInt(20, maxY)}px`;
-      btn.style.boxShadow = `0 0 50px ${randomColor()}, 0 0 100px ${randomColor()} inset`;
-
-      cubeContainer.style.display = 'none';
-      madnessContainer.style.display = 'block';
-
-      // Create tons of floating shapes for madness
-      madnessContainer.innerHTML = ''; // clear previous shapes
-      const count = randomInt(30, 50);
-      for(let i = 0; i < count; i++) {
-        createShape();
-      }
+  // === PARTICLES on button press ===
+  function createParticles(x,y) {
+    for(let i=0; i<150; i++){
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      const size = random(4,12);
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      particles.appendChild(p);
+      const angle = random(0, 2*Math.PI);
+      const speed = random(1,6);
+      let vx = Math.cos(angle)*speed;
+      let vy = Math.sin(angle)*speed;
+      let life = 60 + random(0,40);
+      (function animateParticle(){
+        if(life-- > 0){
+          vx *= 0.95; vy *= 0.95;
+          let px = parseFloat(p.style.left);
+          let py = parseFloat(p.style.top);
+          px += vx; py += vy;
+          p.style.left = px + 'px';
+          p.style.top = py + 'px';
+          p.style.opacity = life/100;
+          requestAnimationFrame(animateParticle);
+        } else {
+          p.remove();
+        }
+      })();
     }
+  }
+
+  // === CONFETTI ===
+  let confettiPieces = [];
+  function createConfetti() {
+    for(let i=0; i<100; i++){
+      const c = document.createElement('div');
+      c.classList.add('confetti-piece');
+      c.style.left = random(0, window.innerWidth) + 'px';
+      c.style.top = random(-100, -10) + 'px';
+      c.style.background = `hsl(${random(0,360)}, 100%, 70%)`;
+      c.style.width = c.style.height = random(6,12) + 'px';
+      c.style.transform = `rotate(${random(0,360)}deg)`;
+      confetti.appendChild(c);
+      confettiPieces.push({el:c, x: parseFloat(c.style.left), y: parseFloat(c.style.top), speedY: random(1,3), rotation: random(0,360), rotSpeed: random(-5,5)});
+    }
+  }
+  createConfetti();
+
+  function updateConfetti() {
+    confettiPieces.forEach(p=>{
+      p.y += p.speedY;
+      p.rotation += p.rotSpeed;
+      if(p.y > window.innerHeight){
+        p.y = random(-100, -10);
+        p.x = random(0, window.innerWidth);
+      }
+      p.el.style.top = p.y + 'px';
+      p.el.style.left = p.x + 'px';
+      p.el.style.transform = `rotate(${p.rotation}deg)`;
+    });
+    requestAnimationFrame(updateConfetti);
+  }
+  updateConfetti();
+
+  // === MOUSE TRAIL ===
+  let trailDots = [];
+  function createTrailDot(x,y) {
+    const dot = document.createElement('div');
+    dot.classList.add('trail-dot');
+    dot.style.left = x + 'px';
+    dot.style.top = y + 'px';
+    trail.appendChild(dot);
+    trailDots.push({el: dot, x, y, alpha: 1});
+  }
+  function updateTrail() {
+    trailDots.forEach((dot,i) => {
+      dot.alpha -= 0.03;
+      dot.y -= 0.5;
+      dot.el.style.top = dot.y + 'px';
+      dot.el.style.opacity = dot.alpha;
+      if(dot.alpha <= 0){
+        dot.el.remove();
+        trailDots.splice(i, 1);
+      }
+    });
+    requestAnimationFrame(updateTrail);
+  }
+  updateTrail();
+
+  window.addEventListener('mousemove', e => {
+    createTrailDot(e.clientX, e.clientY);
   });
+
+  // === FRACTAL KALEIDOSCOPE ===
+  const fractalCtx = document.createElement('canvas').getContext('2d');
+  fractalCtx.canvas.width = 600;
+  fractalCtx.canvas.height = 600;
+  fractalContainer.appendChild(fractalCtx.canvas);
+
+  function drawFractal(t=0) {
+    const ctx = fractalCtx;
+    const w = ctx.canvas.width;
+    const h = ctx.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    function drawBranch(x, y, len, angle, depth){
+      if(depth === 0) return;
+      ctx.strokeStyle = `hsl(${(t*40 + depth*40) % 360}, 100%, 60%)`;
+      ctx.lineWidth = depth;
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      const nx = x + len*Math.cos(angle);
+      const ny = y + len*Math.sin(angle);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      drawBranch(nx, ny, len*0.7, angle - Math.PI/4, depth - 1);
+      drawBranch(nx, ny, len*0.7, angle + Math.PI/4, depth - 1);
+    }
+    ctx.lineCap = 'round';
+    drawBranch(w/2, h, 120, -Math.PI/2, 7);
+
+    requestAnimationFrame(() => drawFractal(t+0.01));
+  }
+  drawFractal();
+
+  // === BUTTON GLITCH EFFECT toggle ===
+  function toggleGlitch(on){
+    if(on) button.classList.add('glitch');
+    else button.classList.remove('glitch');
+  }
+
+  // === LEVELS & MADNESS ===
+  function levelUp() {
+    level++;
+    levelIndicator.textContent = 'Level: ' + level;
+
+    // Flash background speed up
+    flashBg.style.animationDuration = Math.max(0.5, 4 - level*0.3) + 's';
+
+    // ZoomWarp speed
+    zoomWarp.style.animationDuration = Math.max(2, 8 - level*0.8) + 's';
+
+    // Add more clones as level goes up (max 50)
+    if(clones.length < Math.min(50, 15 + level * 3)) {
+      createClone();
+    }
+
+    // Play more intense beep
+    playBeep(440 + level*30, 100);
+
+    // Toggle glitch effect on button randomly by level
+    toggleGlitch(Math.random() < 0.5 + level*0.05);
+
+    // Shake the button with madness level
+    button.style.transform = `scale(1.1) translate(${random(-5,5)}px,${random(-5,5)}px)`;
+
+    // Spawn particles at button center
+    const rect = button.getBoundingClientRect();
+    createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+
+    // Tunnel spin faster
+    tunnel.style.animationDuration = Math.max(1, 10 - level) + 's';
+
+    // Confetti speed boost
+    confettiPieces.forEach(p => p.speedY = 1 + level * 0.5);
+
+    // Zoom warp intensity up
+    zoomWarp.style.filter = `hue-rotate(${level*60}deg) saturate(${150 + level*20}%) brightness(${110 + level*10}%) contrast(${130 + level*10}%) drop-shadow(0 0 20px magenta)`;
+
+    // Button clone size changes crazily
+    clones.forEach(c=>{
+      const scale = 1 + 0.3 * Math.sin(level + Date.now()/200 + c.el.offsetLeft);
+      c.el.style.transform = `scale(${scale}) rotate(${Date.now()/50}deg)`;
+    });
+
+    // After max level 20, insanity maxed, show crazy alert
+    if(level >= 20) {
+      alert('INSANITY MAX LEVEL REACHED! MADNESS COMPLETE!');
+      location.reload();
+    }
+  }
+
+  button.addEventListener('click', () => {
+    // Unlock AudioContext on first user interaction
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+
+    levelUp();
+  });
+
+  // === RANDOM LIGHTNING STRIKES & SHAKE ===
+  function lightningStrike(){
+    const lightning = document.createElement('div');
+    lightning.style.position = 'fixed';
+    lightning.style.top = '0'; lightning.style.left = '0';
+    lightning.style.width = '100vw';
+    lightning.style.height = '100vh';
+    lightning.style.background = 'white';
+    lightning.style.opacity = '0.8';
+    lightning.style.mixBlendMode = 'screen';
+    lightning.style.zIndex = 10000;
+    document.body.appendChild(lightning);
+    setTimeout(() => lightning.remove(), 80);
+    document.body.style.filter = 'brightness(1.2) saturate(2)';
+    setTimeout(() => {
+      document.body.style.filter = '';
+    }, 200);
+  }
+
+  setInterval(() => {
+    if(level > 5 && Math.random() < 0.15){
+      lightningStrike();
+      // screen shake
+      document.body.style.transform = `translate(${random(-10,10)}px,${random(-10,10)}px)`;
+      setTimeout(() => {
+        document.body.style.transform = '';
+      }, 100);
+    }
+  }, 1000);
+
+  // === TEXT TO SHAPE EXPLOSION ===
+  function textExplosion() {
+    const text = button.textContent;
+    button.textContent = '';
+    for(let i=0; i<text.length; i++){
+      const span = document.createElement('span');
+      span.textContent = text[i];
+      span.style.position = 'relative';
+      span.style.display = 'inline-block';
+      span.style.color = `hsl(${i*60}, 100%, 70%)`;
+      span.style.fontWeight = 'bold';
+      span.style.fontSize = '3.5rem';
+      span.style.userSelect = 'none';
+      button.appendChild(span);
+      // Animate letters flying away
+      (function animateLetter(s, delay){
+        setTimeout(() => {
+          s.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+          const angle = Math.random()*2*Math.PI;
+          const dist = 150 + Math.random()*150;
+          s.style.transform = `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) rotate(${Math.random()*720}deg)`;
+          s.style.opacity = 0;
+          setTimeout(() => {
+            if(button) button.textContent = 'PRESS ME!';
+          }, 1000);
+        }, delay);
+      })(span, i*100);
+    }
+  }
+
+  // Trigger text explosion every 5 levels
+  setInterval(() => {
+    if(level > 0 && level % 5 === 0){
+      textExplosion();
+    }
+  }, 6000);
+
 </script>
 
 </body>
