@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultimate Crazy Press the Button!</title>
+  <style>
+    /* Base styles */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+    body {
+      margin: 0; 
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      overflow: hidden;
+      font-family: 'Orbitron', monospace;
+      color: white;
+      user-select: none;
+    }
+    #container {
+      text-align: center;
+    }
+    #level-indicator {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 8px #ff00ff;
+    }
+    #crazy-button {
+      background: linear-gradient(90deg, #ff007f, #7f00ff);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 900;
+      padding: 25px 80px;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 0 25px #ff00ff, 0 0 40px #7f00ff inset;
+      transition: all 0.3s ease;
+      position: relative;
+      perspective: 1000px;
+    }
+    #crazy-button:active {
+      filter: brightness(1.3);
+      transform: scale(1.1);
+    }
+
+    /* Shake animation */
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0) rotate(0); }
+      20%, 60% { transform: translate(-10px, 5px) rotate(-5deg); }
+      40%, 80% { transform: translate(10px, -5px) rotate(5deg); }
+    }
+
+    /* Pulse animation */
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px #ff00ff, 0 0 40px #7f00ff inset; }
+      50% { box-shadow: 0 0 40px #00ffff, 0 0 80px #ff00ff inset; }
+    }
+
+    /* Spin animation */
+    @keyframes spin {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
+    }
+
+    /* Psychedelic Background animation */
+    @keyframes psychedelic {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    /* 3D cube container */
+    #cube-container {
+      width: 150px;
+      height: 150px;
+      margin: 40px auto 0;
+      perspective: 800px;
+      display: none;
+    }
+    #cube {
+      width: 150px;
+      height: 150px;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: spin 10s linear infinite;
+    }
+    .face {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(45deg, #ff007f, #7f00ff);
+      border: 2px solid white;
+      opacity: 0.9;
+      box-shadow: 0 0 10px white;
+      line-height: 150px;
+      font-size: 3rem;
+      font-weight: 900;
+      text-align: center;
+      color: white;
+      font-family: 'Orbitron', monospace;
+      user-select: none;
+    }
+    .front  { transform: translateZ(75px); }
+    .back   { transform: rotateY(180deg) translateZ(75px); }
+    .right  { transform: rotateY(90deg) translateZ(75px); }
+    .left   { transform: rotateY(-90deg) translateZ(75px); }
+    .top    { transform: rotateX(90deg) translateZ(75px); }
+    .bottom { transform: rotateX(-90deg) translateZ(75px); }
+
+    /* Final madness container */
+    #madness {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      display: none;
+      overflow: visible;
+      z-index: 999;
+      filter: drop-shadow(0 0 10px white);
+      animation: psychedelic 15s linear infinite;
+    }
+
+    /* Psychedelic floating shapes */
+    .shape {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff00ff, #00ffff);
+      opacity: 0.7;
+      box-shadow: 0 0 10px #ff00ff, 0 0 15px #00ffff inset;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="level-indicator">Level: 1</div>
+    <button id="crazy-button">PRESS ME!</button>
+
+    <div id="cube-container">
+      <div id="cube">
+        <div class="face front">🤪</div>
+        <div class="face back">🔥</div>
+        <div class="face right">💥</div>
+        <div class="face left">💫</div>
+        <div class="face top">🌈</div>
+        <div class="face bottom">⚡</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="madness"></div>
+
+<script>
+  const btn = document.getElementById('crazy-button');
+  const levelIndicator = document.getElementById('level-indicator');
+  const cubeContainer = document.getElementById('cube-container');
+  const madnessContainer = document.getElementById('madness');
+  let level = 1;
+
+  // Play beep sounds
+  function playBeep(freq, duration = 150) {
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.frequency.value = freq;
+    oscillator.type = 'square';
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.start();
+
+    gainNode.gain.setValueAtTime(1, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+
+    oscillator.stop(ctx.currentTime + duration / 1000);
+  }
+
+  // Random HSL color for neon madness
+  function randomColor() {
+    return `hsl(${Math.floor(Math.random() * 360)}, 100%, 60%)`;
+  }
+
+  // Helper: random int
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // Shake animation helper
+  function shakeElement(el, duration = 700) {
+    el.style.animation = 'shake 0.7s';
+    setTimeout(() => { el.style.animation = ''; }, duration);
+  }
+
+  // Create a floating psychedelic shape for final madness
+  function createShape() {
+    const shape = document.createElement('div');
+    shape.classList.add('shape');
+    shape.style.background = `linear-gradient(45deg, ${randomColor()}, ${randomColor()})`;
+    shape.style.width = shape.style.height = `${randomInt(15, 50)}px`;
+    shape.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%'; // circle or square-ish
+
+    // Random start position
+    shape.style.top = `${randomInt(0, window.innerHeight)}px`;
+    shape.style.left = `${randomInt(0, window.innerWidth)}px`;
+
+    // Animation
+    const animDuration = randomInt(4000, 10000);
+    const keyframesName = `float${Math.random().toString(36).substr(2,5)}`;
+
+    const keyframes = `
+      @keyframes ${keyframesName} {
+        0% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
+        50% { transform: translate(${randomInt(-100,100)}px, ${randomInt(-100,100)}px) rotate(${randomInt(0,360)}deg); opacity: 1; }
+        100% { transform: translate(0,0) rotate(0deg); opacity: 0.7; }
+      }
+    `;
+    const styleSheet = document.styleSheets[0];
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+
+    shape.style.animation = `${keyframesName} ${animDuration}ms ease-in-out infinite`;
+
+    madnessContainer.appendChild(shape);
+  }
+
+  // Main madness progression
+  btn.addEventListener('click', () => {
+    level++;
+    if(level > 10) level = 1;
+    levelIndicator.textContent = `Level: ${level}`;
+
+    // Play beep with frequency increasing by level
+    playBeep(200 + level * 150, 100);
+
+    // LEVEL 1-3: Mild madness - color shifts, shake, size jump
+    if(level <= 3) {
+      // Color crazy gradient background
+      const c1 = randomColor();
+      const c2 = randomColor();
+      btn.style.background = `linear-gradient(90deg, ${c1}, ${c2})`;
+      btn.style.color = randomColor();
+
+      // Random padding and font size jump
+      const pad = randomInt(15, 60);
+      btn.style.padding = `${pad}px ${pad * 2}px`;
+      btn.style.fontSize = `${(Math.random() * 1.5 + 1.5).toFixed(2)}rem`;
+
+      // Shake button
+      shakeElement(btn);
+
+      // Slight random movement
+      btn.style.position = 'relative';
+      btn.style.left = `${randomInt(-20, 20)}px`;
+      btn.style.top = `${randomInt(-20, 20)}px`;
+
+      // Remove madness container if visible
+      madnessContainer.style.display = 'none';
+      cubeContainer.style.display = 'none';
+      btn.style.boxShadow = `0 0 25px ${c1}, 0 0 40px ${c2} inset`;
+      btn.style.animation = 'pulse 2s infinite alternate';
+
+    } else if(level <= 6) {
+      // LEVEL 4-6: Add 3D cube + wild spinning & glowing button
+      btn.style.animation = 'spin 4s linear infinite';
+      btn.style.color = '#fff';
+      btn.style.background = 'linear-gradient(90deg, #ff0080, #8000ff)';
+      btn.style.padding = '30px 90px';
+      btn.style.fontSize = '3rem';
+      btn.style.position = 'relative';
+      btn.style.left = '0';
+      btn.style.top = '0';
+      btn.style.boxShadow = '0 0 30px #ff00ff, 0 0 60px #8000ff inset';
+
+      cubeContainer.style.display = 'block';
+      madnessContainer.style.display = 'none';
+
+    } else {
+      // LEVEL 7-10: Absolute madness! Psychedelic shapes explode and swirl!
+
+      // Stop button spin but do crazy colors & flickering
+      btn.style.animation = '';
+      btn.style.background = `linear-gradient(90deg, ${randomColor()}, ${randomColor()})`;
+      btn.style.color = randomColor();
+      btn.style.padding = `${randomInt(20, 70)}px ${randomInt(60, 150)}px`;
+      btn.style.fontSize = `${(Math.random() * 2 + 2).toFixed(2)}rem`;
+      btn.style.position = 'absolute';
+
+      // Move button randomly on screen (avoid edges)
+      const maxX = window.innerWidth - btn.offsetWidth - 20;
+      const maxY = window.innerHeight - btn.offsetHeight - 20;
+      btn.style.left = `${randomInt(20, maxX)}px`;
+      btn.style.top = `${randomInt(20, maxY)}px`;
+      btn.style.boxShadow = `0 0 50px ${randomColor()}, 0 0 100px ${randomColor()} inset`;
+
+      cubeContainer.style.display = 'none';
+      madnessContainer.style.display = 'block';
+
+      // Create tons of floating shapes for madness
+      madnessContainer.innerHTML = ''; // clear previous shapes
+      const count = randomInt(30, 50);
+      for(let i = 0; i < count; i++) {
+        createShape();
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
